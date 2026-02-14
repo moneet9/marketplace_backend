@@ -199,10 +199,10 @@ export const requestEmailChangeOTP = async (req, res) => {
 // ---------------- CHANGE EMAIL - STEP 2: VERIFY OTP AND UPDATE EMAIL ----------------
 export const verifyAndChangeEmail = async (req, res) => {
   try {
-    const { otp, newEmail } = req.body;
+    const { newEmail } = req.body;
 
-    if (!otp || !newEmail) {
-      return res.status(400).json({ message: 'OTP and new email are required' });
+    if (!newEmail) {
+      return res.status(400).json({ message: 'New email is required' });
     }
 
     const user = await User.findById(req.user._id);
@@ -211,25 +211,14 @@ export const verifyAndChangeEmail = async (req, res) => {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    // Verify OTP
-    if (user.otp !== otp) {
-      return res.status(401).json({ message: 'Invalid OTP' });
-    }
-
-    if (user.otpExpires < new Date()) {
-      return res.status(401).json({ message: 'OTP has expired' });
-    }
-
     // Check if new email already exists
     const emailExists = await User.findOne({ email: newEmail });
     if (emailExists) {
       return res.status(400).json({ message: 'Email already in use' });
     }
 
-    // Update email and clear OTP
+    // Update email
     user.email = newEmail;
-    user.otp = undefined;
-    user.otpExpires = undefined;
     await user.save();
 
     res.json({
@@ -275,13 +264,13 @@ export const requestPasswordChangeOTP = async (req, res) => {
   }
 };
 
-// ---------------- CHANGE PASSWORD - STEP 2: VERIFY OTP AND SET NEW PASSWORD ----------------
-export const verifyOTPAndChangePassword = async (req, res) => {
+// ---------------- CHANGE PASSWORD (NO OTP) ----------------
+export const changePassword = async (req, res) => {
   try {
-    const { otp, newPassword } = req.body;
+    const { newPassword } = req.body;
 
-    if (!otp || !newPassword) {
-      return res.status(400).json({ message: 'OTP and new password are required' });
+    if (!newPassword) {
+      return res.status(400).json({ message: 'New password is required' });
     }
 
     if (newPassword.length < 6) {
@@ -294,19 +283,8 @@ export const verifyOTPAndChangePassword = async (req, res) => {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    // Verify OTP
-    if (user.otp !== otp) {
-      return res.status(401).json({ message: 'Invalid OTP' });
-    }
-
-    if (user.otpExpires < new Date()) {
-      return res.status(401).json({ message: 'OTP has expired' });
-    }
-
-    // Update password and clear OTP
+    // Update password
     user.password = newPassword;
-    user.otp = undefined;
-    user.otpExpires = undefined;
     await user.save();
 
     res.json({

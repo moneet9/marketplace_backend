@@ -8,6 +8,7 @@ import {
   markAsSold,
   deleteItem,
   placeBid,
+  getMyBids,
 } from '../controller/item_c.js';
 import { protect } from '../middleware/auth.js';
 
@@ -19,6 +20,7 @@ router.get('/', getAllItems);
 // Protected routes (requires authentication)
 router.post('/', protect, createItem);
 router.get('/my/items', protect, getMyItems);
+router.get('/my/bids', protect, getMyBids);
 router.put('/:id/mark-sold', protect, markAsSold);
 router.put('/:id/bid', protect, placeBid);
 router.put('/:id', protect, updateItem);

@@ -58,6 +58,11 @@ const itemSchema = new mongoose.Schema(
         return this.startingBid || 0;
       },
     },
+    highestBidderId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      default: null,
+    },
     auctionEndDate: {
       type: Date,
     },

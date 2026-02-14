@@ -140,7 +140,9 @@ export const getItemById = async (req, res) => {
 // ---------------- GET MY ITEMS ----------------
 export const getMyItems = async (req, res) => {
   try {
-    const items = await Item.find({ sellerId: req.user._id }).sort({ createdAt: -1 });
+    const items = await Item.find({ sellerId: req.user._id })
+      .populate('highestBidderId', 'name email')
+      .sort({ createdAt: -1 });
 
     // Convert images to base64
     const itemsWithImages = items.map((item) => {
@@ -266,8 +268,10 @@ export const placeBid = async (req, res) => {
       });
     }
 
-    // Update the current bid
+    // Update the current bid and highest bidder
     item.currentBid = bidAmount;
+    item.highestBidderId = req.user._id;
+    item.bidCount = (item.bidCount || 0) + 1;
     await item.save();
 
     res.json({
@@ -279,6 +283,34 @@ export const placeBid = async (req, res) => {
         status: item.status,
       },
     });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// ---------------- GET MY BIDS ----------------
+export const getMyBids = async (req, res) => {
+  try {
+    const items = await Item.find({
+      highestBidderId: req.user._id,
+      listingType: 'auction',
+      status: 'active',
+    })
+      .populate('sellerId', 'name email phone')
+      .sort({ auctionEndDate: 1 });
+
+    // Convert images to base64
+    const itemsWithImages = items.map((item) => {
+      const plainItem = item.toObject();
+      plainItem.images = plainItem.images.map((img) => ({
+        data: `data:${img.contentType};base64,${img.data.toString('base64')}`,
+        contentType: img.contentType,
+        filename: img.filename,
+      }));
+      return plainItem;
+    });
+
+    res.json({ bids: itemsWithImages, count: itemsWithImages.length });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
