@@ -1,6 +1,5 @@
 import User from '../model/User.js';
 import generateToken from '../utils/generateToken.js';
-import { generateOTP, sendOTPEmail } from '../utils/emailService.js';
 
 // ---------------- REGISTER ----------------
 export const registerUser = async (req, res) => {
@@ -18,25 +17,16 @@ export const registerUser = async (req, res) => {
       return res.status(400).json({ message: 'User already exists' });
     }
 
-    // Generate OTP
-    const otp = generateOTP();
-    const otpExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
-
     const user = await User.create({
       name,
       email,
       phone,
       password,
-      otp,
-      otpExpires,
-      isVerified: false,
+      isVerified: true, // Mark user as verified directly
     });
 
-    // Send OTP via email
-    await sendOTPEmail(email, otp, 'verification');
-
     res.status(201).json({
-      message: 'Registration successful. OTP sent to your email.',
+      message: 'Registration successful.',
       userId: user._id,
       email: user.email,
     });
@@ -62,21 +52,11 @@ export const loginUser = async (req, res) => {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
-    // Generate OTP
-    const otp = generateOTP();
-    const otpExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
-
-    user.otp = otp;
-    user.otpExpires = otpExpires;
-    await user.save();
-
-    // Send OTP via email
-    await sendOTPEmail(user.email, otp, 'verification');
-
     res.json({
-      message: 'OTP sent to your email. Please verify to continue.',
+      message: 'Login successful.',
       userId: user._id,
       email: user.email,
+      token: generateToken(user._id),
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
