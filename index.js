@@ -5,6 +5,7 @@ import mongoose from 'mongoose';
 import authRouter from './route/auth_r.js';
 import itemRouter from './route/item_r.js';
 import chatRouter from './route/chat_r.js';
+import reviewRouter from './route/review_r.js';
 
 dotenv.config();
 
@@ -20,6 +21,7 @@ app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 app.use('/api/auth', authRouter);
 app.use('/api/items', itemRouter);
 app.use('/api/chats', chatRouter);
+app.use('/api/reviews', reviewRouter);
 
 // Health check
 app.get('/', (req, res) => {
